@@ -4,10 +4,12 @@ import Profile from "./pages/Profile";
 import About from "./pages/About";
 import SignUp from "./pages/SignUp";
 import SignIn from "./pages/SignIn";
+import Navbar from "./components/Navbar";
 
 const App = () => {
   return (
     <>
+      <Navbar />
       <Routes>
         <Route path="/" element={<Homepage />} />
         <Route path="/sign-in" element={<SignIn />} />
