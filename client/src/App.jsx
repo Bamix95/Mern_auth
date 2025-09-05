@@ -1,21 +1,22 @@
 import { Route, Routes } from "react-router-dom";
 import Homepage from "./pages/Homepage";
-import Profile from "./pages/Profile";
-import About from "./pages/About";
 import SignUp from "./pages/SignUp";
 import SignIn from "./pages/SignIn";
-import Navbar from "./components/Navbar";
+import AuthLayout from "./layouts/AuthLayout";
+import NotFound from "./pages/NotFound";
 
 const App = () => {
   return (
     <>
-      <Navbar />
       <Routes>
         <Route path="/" element={<Homepage />} />
-        <Route path="/sign-in" element={<SignIn />} />
-        <Route path="/sign-up" element={<SignUp />} />
-        <Route path="/about" element={<About />} />
-        <Route path="/profile" element={<Profile />} />
+        <Route path="/authentication/sign-in" element={<AuthLayout />}>
+          <Route index element={<SignIn />} />
+        </Route>
+        <Route path="/authentication/sign-up" element={<AuthLayout />}>
+          <Route index element={<SignUp />} />
+        </Route>
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </>
   );
