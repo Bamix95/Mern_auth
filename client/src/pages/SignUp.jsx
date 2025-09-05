@@ -1,5 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { signupSchema } from "../utils/validationSchemas";
 import Input from "../components/Input";
@@ -22,7 +23,12 @@ const SignUp = () => {
 
   return (
     <section className="w-full">
-      <div className="max-w-md w-full mx-auto px-4">
+      <motion.div
+        initial={{ scale: 0.8, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ duration: 0.8, ease: "easeInOut" }}
+        className="max-w-md w-full mx-auto px-4"
+      >
         <div className="mt-4 space-y-3">
           <h1 className="text-center text-black font-semibold text-2xl md:text-2xl">
             Create Your Account
@@ -98,7 +104,7 @@ const SignUp = () => {
             Sign In
           </Link>
         </p>
-      </div>
+      </motion.div>
     </section>
   );
 };
