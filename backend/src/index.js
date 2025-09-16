@@ -8,6 +8,7 @@ import cookieParser from "cookie-parser";
 import config from "./config/env.config.js";
 import { AppError } from "./utils/appError.js";
 import asyncHandler from "./utils/asyncHandler.js";
+import authRoute from "./routes/auth.route.js";
 
 dotenv.config();
 
@@ -43,6 +44,8 @@ app.get(
     throw new AppError("This is a test error", 400);
   })
 );
+
+app.use("/api/auth", authRoute);
 
 app.use((req, res, next) => {
   next(new AppError(`Route not found: ${req.originalUrl}`, 404));
