@@ -123,4 +123,24 @@ const resendOtp = asyncHandler(async (req, res) => {
   }
 });
 
-export { registerUser, verifyAccount, resendOtp };
+const loginUser = asyncHandler(async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    throw new AppError("All fields are required", 400);
+  }
+
+  const user = await User.findOne({ email }).select("+password");
+  if (!user) {
+    throw new AppError("User does not exist", 404);
+  }
+
+  const isMatch = await user.comparePassword(password);
+  if (!isMatch) {
+    throw new AppError("Invalid email or password", 401);
+  }
+
+  createSendToken(user, 200, res, "Login successful");
+});
+
+export { registerUser, verifyAccount, resendOtp, loginUser };
