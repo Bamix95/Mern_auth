@@ -4,6 +4,7 @@ import { AppError } from "../utils/appError.js";
 import { generateOtp } from "../utils/generateOtp.js";
 import sendEmail from "../utils/email.js";
 import createSendToken from "../utils/createSendToken.js";
+import config from "../config/env.config.js";
 
 const registerUser = asyncHandler(async (req, res) => {
   const { username, email, password } = req.body;
@@ -143,4 +144,99 @@ const loginUser = asyncHandler(async (req, res) => {
   createSendToken(user, 200, res, "Login successful");
 });
 
-export { registerUser, verifyAccount, resendOtp, loginUser };
+const logOut = asyncHandler(async (req, res) => {
+  res.clearCookie("token", {
+    httpOnly: true,
+    secure: config.nodeEnv === "production",
+    sameSite: config.nodeEnv === "development" ? "lax" : "strict",
+  });
+
+  res.status(200).json({
+    success: true,
+    message: "Logged out successfully",
+  });
+});
+
+const forgetPassword = asyncHandler(async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+    throw new AppError("Please provide your email", 400);
+  }
+  const user = await User.findOne({ email });
+
+  if (!user) {
+    throw new AppError("User does not exist", 404);
+  }
+
+  const newOtp = generateOtp(4);
+  const newOtpExpires = Date.now() + 15 * 60 * 1000;
+
+  user.resetPasswordOtp = newOtp;
+  user.resetPasswordOtpExpires = newOtpExpires;
+
+  await user.save({ validateBeforeSave: false });
+
+  try {
+    await sendEmail({
+      email: user.email,
+      subject: "Reset Password OTP verification",
+      html: `
+        <h2>Reset Password OTP</h2>
+        <p>Your OTP is: <strong>${newOtp}</strong></p>
+        <p>This code will expire in 15 minutes. Please do not share it with anyone.</p>
+      `,
+    });
+
+    res.status(200).json({
+      success: true,
+      message:
+        "Password reset otp sent to your email, please check and proceed to the next step",
+    });
+  } catch (error) {
+    user.resetPasswordOtp = undefined;
+    user.resetPasswordOtpExpires = undefined;
+    await user.save({ validateBeforeSave: false });
+
+    throw new AppError(
+      "Error occurred sending otp, please try again later",
+      500
+    );
+  }
+});
+
+const resetPassword = asyncHandler(async (req, res) => {
+  const { email, otp, password } = req.body;
+
+  if (!email || !otp || !password) {
+    throw new AppError("Please provide all fields", 400);
+  }
+
+  const user = await User.findOne({
+    email,
+    resetPasswordOtp: otp,
+    resetPasswordOtpExpires: { $gt: Date.now() },
+  });
+
+  if (!user) {
+    throw new AppError("User not found", 404);
+  }
+
+  user.password = password;
+  user.resetPasswordOtp = undefined;
+  user.resetPasswordOtpExpires = undefined;
+
+  await user.save();
+
+  createSendToken(user, 200, res, "Password reset successfully");
+});
+
+export {
+  registerUser,
+  verifyAccount,
+  resendOtp,
+  loginUser,
+  logOut,
+  forgetPassword,
+  resetPassword,
+};
